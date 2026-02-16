@@ -97,4 +97,21 @@ BOOST_DATA_TEST_CASE (
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_tohertz)
+{
+    LuaFixture fix;
+    sol::state_view lua(fix.luaState());
+    lua.script("midi = require('el.midi')");
+
+    for (int note = 0; note <= 127; ++note)
+    {
+        std::string script = "return midi.tohertz(" + std::to_string(note) + ")";
+        double luaFreq = lua.script(script);
+
+        double juceFreq = juce::MidiMessage::getMidiNoteInHertz(note);
+
+        BOOST_CHECK_CLOSE(luaFreq, juceFreq, 0.001);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
