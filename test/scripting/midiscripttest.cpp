@@ -10,6 +10,7 @@ using JuceCounterpart = std::function<juce::MidiMessage()>;
 struct LuaMidiTestCase {
     std::string luaMethodCall;
     JuceCounterpart juceCounterpart;
+    bool shouldCheckTheSecondByte = true;
     bool shouldCheckThirdByte = true;
 
     friend std::ostream& operator<< (std::ostream& os, const LuaMidiTestCase& testCase)
@@ -22,56 +23,64 @@ struct LuaMidiTestCase {
 BOOST_DATA_TEST_CASE (
     luaSimpleBindigs,
     bdata::make (std::initializer_list<LuaMidiTestCase> {
-        { "return midi.noteon(1, 60, 100)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::noteOn (1, 60, (uint8_t) 100); } },
+        { .luaMethodCall = "return midi.noteon(1, 60, 100)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::noteOn (1, 60, (uint8_t) 100); } },
 
-        { "return midi.noteoff(1, 60)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::noteOff (1, 60); } },
+        { .luaMethodCall = "return midi.noteoff(1, 60)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::noteOff (1, 60); } },
 
-        { "return midi.controller(1, 7, 120)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); } },
+        { .luaMethodCall = "return midi.controller(1, 7, 120)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); } },
 
         {
-            "return midi.channelpressure(1, 45)",
-            []() -> juce::MidiMessage { return juce::MidiMessage::channelPressureChange (1, 45); },
-            false,
+            .luaMethodCall = "return midi.channelpressure(1, 45)",
+            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::channelPressureChange (1, 45); },
+            .shouldCheckThirdByte = false,
         },
 
-        { "return midi.program(1, 5)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); },
-          false },
+        { .luaMethodCall = "return midi.program(1, 5)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); },
+          .shouldCheckThirdByte = false },
 
-        { "return midi.pitch(1, 8192)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::pitchWheel (1, 8192); } },
+        { .luaMethodCall = "return midi.pitch(1, 8192)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::pitchWheel (1, 8192); } },
 
-        { "return midi.aftertouch(1, 60, 64)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::aftertouchChange (1, 60, 64); } },
+        { .luaMethodCall = "return midi.aftertouch(1, 60, 64)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::aftertouchChange (1, 60, 64); } },
 
-        { "return midi.allnotesoff(1)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::allNotesOff (1); } },
+        { .luaMethodCall = "return midi.allnotesoff(1)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::allNotesOff (1); } },
 
-        { "return midi.allsoundsoff(1)",
-          []() -> juce::MidiMessage { return juce::MidiMessage::allSoundOff (1); } },
+        { .luaMethodCall = "return midi.allsoundsoff(1)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::allSoundOff (1); } },
 
-        //        LuaMidiTestCase {
-        //            "return midi.clock()",
-        //            []() -> juce::MidiMessage { return juce::MidiMessage::midiClock(); }
-        //        },
+        {
+            .luaMethodCall = "return midi.clock()",
+            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiClock(); },
+            .shouldCheckTheSecondByte = false,
+            .shouldCheckThirdByte = false,
+        },
 
-        //        LuaMidiTestCase {
-        //            "return midi.start()",
-        //            []() -> juce::MidiMessage { return juce::MidiMessage::midiStart(); }
-        //        },
+        {
+            .luaMethodCall = "return midi.start()",
+            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStart(); },
+            .shouldCheckTheSecondByte = false,
+            .shouldCheckThirdByte = false,
 
-        //        LuaMidiTestCase {
-        //            "return midi.stop()",
-        //            []() -> juce::MidiMessage { return juce::MidiMessage::midiStop(); }
-        //        },
+        },
+        {
+            .luaMethodCall = "return midi.stop()",
+            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStop(); },
+            .shouldCheckTheSecondByte = false,
+            .shouldCheckThirdByte = false,
+        },
 
-        //        LuaMidiTestCase {
-        //            "return midi.continue()",
-        //            []() -> juce::MidiMessage { return juce::MidiMessage::midiContinue(); }
-        //        }
+        {
+            .luaMethodCall = "return midi.continue()",
+            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiContinue(); },
+            .shouldCheckTheSecondByte = false,
+            .shouldCheckThirdByte = false,
+        },
     }),
     testData)
 {
@@ -83,7 +92,11 @@ BOOST_DATA_TEST_CASE (
 
     auto expected = testData.juceCounterpart();
     BOOST_CHECK_EQUAL (uint8_t (packed), expected.getRawData()[0]);
-    BOOST_CHECK_EQUAL (uint8_t (packed >> 8), expected.getRawData()[1]);
+    if (testData.shouldCheckTheSecondByte) {
+        BOOST_CHECK_EQUAL (uint8_t (packed >> 8), expected.getRawData()[1]);
+    } else {
+        BOOST_CHECK_EQUAL (uint8_t (packed >> 8), 0);
+    }
     if (testData.shouldCheckThirdByte) {
         BOOST_CHECK_EQUAL (uint8_t (packed >> 16), expected.getRawData()[2]);
     } else {
