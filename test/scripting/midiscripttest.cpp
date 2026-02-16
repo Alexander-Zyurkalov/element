@@ -40,10 +40,10 @@ BOOST_DATA_TEST_CASE (
 //            []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); }
 //        },
 //
-//        LuaMidiTestCase {
-//            "return midi.pitch(1, 8192)",
-//            []() -> juce::MidiMessage { return juce::MidiMessage::pitchWheel (1, 8192); }
-//        },
+        LuaMidiTestCase {
+            "return midi.pitch(1, 8192)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::pitchWheel (1, 8192); }
+        },
 
         LuaMidiTestCase {
             "return midi.aftertouch(1, 60, 64)",
