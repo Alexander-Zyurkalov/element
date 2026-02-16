@@ -23,20 +23,14 @@ struct LuaMidiTestCase {
 BOOST_DATA_TEST_CASE (
     luaSimpleBindigs,
     bdata::make (std::initializer_list<LuaMidiTestCase> {
+        { .luaMethodCall = "return midi.controller(1, 7, 120)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); } },
+
         { .luaMethodCall = "return midi.noteon(1, 60, 100)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::noteOn (1, 60, (uint8_t) 100); } },
 
         { .luaMethodCall = "return midi.noteoff(1, 60)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::noteOff (1, 60); } },
-
-        { .luaMethodCall = "return midi.controller(1, 7, 120)",
-          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); } },
-
-        {
-            .luaMethodCall = "return midi.channelpressure(1, 45)",
-            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::channelPressureChange (1, 45); },
-            .shouldCheckThirdByte = false,
-        },
 
         { .luaMethodCall = "return midi.program(1, 5)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); },
@@ -48,39 +42,38 @@ BOOST_DATA_TEST_CASE (
         { .luaMethodCall = "return midi.aftertouch(1, 60, 64)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::aftertouchChange (1, 60, 64); } },
 
+        { .luaMethodCall = "return midi.channelpressure(1, 45)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::channelPressureChange (1, 45); },
+          .shouldCheckThirdByte = false },
+
         { .luaMethodCall = "return midi.allnotesoff(1)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::allNotesOff (1); } },
 
         { .luaMethodCall = "return midi.allsoundsoff(1)",
           .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::allSoundOff (1); } },
 
-        {
-            .luaMethodCall = "return midi.clock()",
-            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiClock(); },
-            .shouldCheckTheSecondByte = false,
-            .shouldCheckThirdByte = false,
-        },
+        { .luaMethodCall = "return midi.allcontrollersoff(1)",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::allControllersOff (1); } },
 
-        {
-            .luaMethodCall = "return midi.start()",
-            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStart(); },
-            .shouldCheckTheSecondByte = false,
-            .shouldCheckThirdByte = false,
+        { .luaMethodCall = "return midi.clock()",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiClock(); },
+          .shouldCheckTheSecondByte = false,
+          .shouldCheckThirdByte = false },
 
-        },
-        {
-            .luaMethodCall = "return midi.stop()",
-            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStop(); },
-            .shouldCheckTheSecondByte = false,
-            .shouldCheckThirdByte = false,
-        },
+        { .luaMethodCall = "return midi.start()",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStart(); },
+          .shouldCheckTheSecondByte = false,
+          .shouldCheckThirdByte = false },
 
-        {
-            .luaMethodCall = "return midi.continue()",
-            .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiContinue(); },
-            .shouldCheckTheSecondByte = false,
-            .shouldCheckThirdByte = false,
-        },
+        { .luaMethodCall = "return midi.stop()",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiStop(); },
+          .shouldCheckTheSecondByte = false,
+          .shouldCheckThirdByte = false },
+
+        { .luaMethodCall = "return midi.continue()",
+          .juceCounterpart = []() -> juce::MidiMessage { return juce::MidiMessage::midiContinue(); },
+          .shouldCheckTheSecondByte = false,
+          .shouldCheckThirdByte = false },
     }),
     testData)
 {
