@@ -133,7 +133,7 @@ static int f_aftertouch (lua_State* L)
 static int f_channelpressure (lua_State* L)
 {
     lua_pushinteger (L, 0x00);
-    return f_msg3bytes (L, 0x00);
+    return f_msg3bytes (L, 0xD0);
 }
 
 /// Make an all notes off message.

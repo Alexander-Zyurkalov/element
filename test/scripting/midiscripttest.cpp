@@ -31,6 +31,12 @@ BOOST_DATA_TEST_CASE (
         { "return midi.controller(1, 7, 120)",
           []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); } },
 
+        {
+            "return midi.channelpressure(1, 45)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::channelPressureChange (1, 45); },
+            false,
+        },
+
         { "return midi.program(1, 5)",
           []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); },
           false },
@@ -80,6 +86,8 @@ BOOST_DATA_TEST_CASE (
     BOOST_CHECK_EQUAL (uint8_t (packed >> 8), expected.getRawData()[1]);
     if (testData.shouldCheckThirdByte) {
         BOOST_CHECK_EQUAL (uint8_t (packed >> 16), expected.getRawData()[2]);
+    } else {
+        BOOST_CHECK_EQUAL (uint8_t (packed >> 16), 0);
     }
 }
 
