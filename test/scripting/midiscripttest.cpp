@@ -22,7 +22,7 @@ BOOST_DATA_TEST_CASE (
     bdata::make ({
         LuaMidiTestCase {
             "return midi.noteon(1, 60, 100)",
-            []() -> juce::MidiMessage { return juce::MidiMessage::noteOn (1, 60, (uint8_t) 100u); }
+            []() -> juce::MidiMessage { return juce::MidiMessage::noteOn (1, 60, (uint8_t) 100); }
         },
 
         LuaMidiTestCase {
@@ -30,6 +30,55 @@ BOOST_DATA_TEST_CASE (
             []() -> juce::MidiMessage { return juce::MidiMessage::noteOff (1, 60); }
         },
 
+        LuaMidiTestCase {
+            "return midi.controller(1, 7, 120)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::controllerEvent (1, 7, 120); }
+        },
+
+//        LuaMidiTestCase {
+//            "return midi.program(1, 5)",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::programChange (1, 5); }
+//        },
+//
+//        LuaMidiTestCase {
+//            "return midi.pitch(1, 8192)",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::pitchWheel (1, 8192); }
+//        },
+
+        LuaMidiTestCase {
+            "return midi.aftertouch(1, 60, 64)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::aftertouchChange (1, 60, 64); }
+        },
+
+        LuaMidiTestCase {
+            "return midi.allnotesoff(1)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::allNotesOff (1); }
+        },
+
+        LuaMidiTestCase {
+            "return midi.allsoundsoff(1)",
+            []() -> juce::MidiMessage { return juce::MidiMessage::allSoundOff (1); }
+        },
+
+//        LuaMidiTestCase {
+//            "return midi.clock()",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::midiClock(); }
+//        },
+
+//        LuaMidiTestCase {
+//            "return midi.start()",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::midiStart(); }
+//        },
+
+//        LuaMidiTestCase {
+//            "return midi.stop()",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::midiStop(); }
+//        },
+
+//        LuaMidiTestCase {
+//            "return midi.continue()",
+//            []() -> juce::MidiMessage { return juce::MidiMessage::midiContinue(); }
+//        }
     }),
     testData)
 {
