@@ -246,7 +246,7 @@ static int f_clamp (lua_State* L)
     else if (value > 127)
         value = 127;
     lua_pushinteger (L, value);
-    return 0;
+    return 1;
 }
 
 static const luaL_Reg midi_f[] = {

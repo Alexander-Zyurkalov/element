@@ -97,21 +97,42 @@ BOOST_DATA_TEST_CASE (
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_tohertz)
+BOOST_AUTO_TEST_CASE (test_tohertz)
 {
     LuaFixture fix;
-    sol::state_view lua(fix.luaState());
-    lua.script("midi = require('el.midi')");
+    sol::state_view lua (fix.luaState());
+    lua.script ("midi = require('el.midi')");
 
-    for (int note = 0; note <= 127; ++note)
-    {
-        std::string script = "return midi.tohertz(" + std::to_string(note) + ")";
-        double luaFreq = lua.script(script);
+    for (int note = 0; note <= 127; ++note) {
+        std::string script = "return midi.tohertz(" + std::to_string (note) + ")";
+        double luaFreq = lua.script (script);
 
-        double juceFreq = juce::MidiMessage::getMidiNoteInHertz(note);
+        double juceFreq = juce::MidiMessage::getMidiNoteInHertz (note);
 
-        BOOST_CHECK_CLOSE(luaFreq, juceFreq, 0.001);
+        BOOST_CHECK_CLOSE (luaFreq, juceFreq, 0.001);
     }
 }
 
+BOOST_AUTO_TEST_CASE (test_clamp)
+{
+    LuaFixture fix;
+    sol::state_view lua (fix.luaState());
+
+    lua.script ("midi = require('el.midi')");
+
+    int64_t resultNormal = lua.script ("return midi.clamp(64)");
+    BOOST_CHECK_EQUAL (resultNormal, 64.0);
+
+    int64_t resultMin = lua.script ("return midi.clamp(0)");
+    BOOST_CHECK_EQUAL (resultMin, 0);
+
+    int64_t resultMax = lua.script ("return midi.clamp(127)");
+    BOOST_CHECK_EQUAL (resultMax, 127);
+
+    int64_t resultUnder = lua.script ("return midi.clamp(-50)");
+    BOOST_CHECK_EQUAL (resultUnder, 0);
+
+    int64_t resultOver = lua.script ("return midi.clamp(200)");
+    BOOST_CHECK_EQUAL (resultOver, 127);
+}
 BOOST_AUTO_TEST_SUITE_END()
