@@ -6,7 +6,6 @@
 
 namespace element {
 
-using namespace juce;
 
 const int DeviceManager::maxAudioChannels = 128;
 
@@ -60,37 +59,37 @@ void DeviceManager::attach (AudioEnginePtr engine)
     impl->engine = engine;
 }
 
-static void addIfNotNull (OwnedArray<AudioIODeviceType>& list, AudioIODeviceType* const device)
+static void addIfNotNull (juce::OwnedArray<juce::AudioIODeviceType>& list, juce::AudioIODeviceType* const device)
 {
     if (device != nullptr)
         list.add (device);
 }
 
-void DeviceManager::createAudioDeviceTypes (OwnedArray<AudioIODeviceType>& list)
+void DeviceManager::createAudioDeviceTypes (juce::OwnedArray<juce::AudioIODeviceType>& list)
 {
 #if JUCE_ALSA
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_ALSA());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_ALSA());
 #endif
 #if ELEMENT_USE_JACK
     addIfNotNull (list, Jack::createAudioIODeviceType (impl->jack));
 #endif
 
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_ASIO());
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_WASAPI (WASAPIDeviceMode::exclusive));
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_WASAPI (WASAPIDeviceMode::sharedLowLatency));
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_DirectSound());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_ASIO());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_WASAPI (juce::WASAPIDeviceMode::exclusive));
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_WASAPI (juce::WASAPIDeviceMode::sharedLowLatency));
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_DirectSound());
 
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_CoreAudio());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_CoreAudio());
 
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_iOSAudio());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_iOSAudio());
 
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_OpenSLES());
-    addIfNotNull (list, AudioIODeviceType::createAudioIODeviceType_Android());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_OpenSLES());
+    addIfNotNull (list, juce::AudioIODeviceType::createAudioIODeviceType_Android());
 }
 
-void DeviceManager::getAudioDrivers (StringArray& drivers)
+void DeviceManager::getAudioDrivers (juce::StringArray& drivers)
 {
-    const OwnedArray<AudioIODeviceType>& types (getAvailableDeviceTypes());
+    const juce::OwnedArray<juce::AudioIODeviceType>& types (getAvailableDeviceTypes());
     for (int i = 0; i < types.size(); ++i)
         drivers.add (types.getUnchecked (i)->getTypeName());
 }
