@@ -223,15 +223,9 @@ void MidiEngine::setMidiInputEnabled (const MidiDeviceInfo& device, const bool e
 {
     if (enabled != isMidiInputEnabled (device))
     {
-        if (enabled)
+        if (auto* holder = getMidiInput (device.identifier, enabled))
         {
-            if (auto* holder = getMidiInput (device.identifier, true))
-                holder->active = true;
-        }
-        else
-        {
-            if (auto* holder = getMidiInput (device.identifier, false))
-                holder->active = false;
+            holder->active = enabled;
         }
 
         sendChangeMessage();
