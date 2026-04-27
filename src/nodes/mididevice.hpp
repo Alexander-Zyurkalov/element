@@ -10,13 +10,14 @@
 namespace element {
 
 class MidiEngine;
+class DeviceManager;
 
 class MidiDeviceProcessor : public BaseProcessor,
                             public MidiInputCallback,
                             private Timer
 {
 public:
-    explicit MidiDeviceProcessor (const bool isInput, MidiEngine&);
+    explicit MidiDeviceProcessor (const bool isInput, MidiEngine&, DeviceManager&);
     ~MidiDeviceProcessor() noexcept;
 
     boost::signals2::signal<void()> sigDeviceChanged;
@@ -158,7 +159,8 @@ private:
     std::unique_ptr<ElementMidiOutput> output;
     Atomic<double> midiOutLatency { 0.0 };
 
-    void waitForDevice() {}
+    SignalConnection midiDevicesChangedConnection;
+
     void timerCallback() override;
     bool deviceIsAvailable (const String& name);
     bool deviceIsAvailable (const MidiDeviceInfo& dev);

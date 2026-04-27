@@ -5,6 +5,7 @@
 
 #include <element/juce/audio_devices.hpp>
 #include <element/audioengine.hpp>
+#include <element/signals.hpp>
 
 namespace element {
 
@@ -25,6 +26,8 @@ public:
 #endif
 
     void createAudioDeviceTypes (juce::OwnedArray<juce::AudioIODeviceType>& list) override;
+
+    Signal<void()> sigMidiDevicesChanged;
 
 private:
     friend class World;

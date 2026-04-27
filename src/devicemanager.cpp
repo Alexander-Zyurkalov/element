@@ -59,6 +59,7 @@ public:
             midiClient = 0;
         }
 #else
+        //TODO: and also midi outputs
         knownMidiInputDevices = juce::MidiInput::getAvailableDevices();
 
         midiListConnection = juce::MidiDeviceListConnection::make ([this] {
@@ -83,26 +84,35 @@ public:
     {
         auto* self = static_cast<Private*> (refCon);
         if (self == nullptr)
+        {
             return;
+        }
 
         if (message->messageID != kMIDIMsgObjectAdded
             && message->messageID != kMIDIMsgObjectRemoved)
+        {
             return;
+        }
 
         auto* addRemove = reinterpret_cast<const MIDIObjectAddRemoveNotification*> (message);
 
-        if (addRemove->childType != kMIDIObjectType_Source)
+        if (addRemove->childType != kMIDIObjectType_Source
+            && addRemove->childType != kMIDIObjectType_Destination)
+        {
             return;
+        }
 
         const bool added = (message->messageID == kMIDIMsgObjectAdded);
         const auto name = getEndpointName (addRemove->child);
 
-        juce::MessageManager::callAsync ([added, name] {
-            if (added)
+        if (added)
+        {
+            juce::MessageManager::callAsync ([self, name] {
                 DBG ("MIDI Device needs refresh (connected): " + name);
-            else
-                DBG ("MIDI Device needs refresh (disconnected): " + name);
-        });
+
+                self->owner.sigMidiDevicesChanged();
+            });
+        }
     }
 #endif
 
@@ -121,6 +131,8 @@ public:
             if (! knownMidiInputDevices.contains (newDevice))
                 DBG ("MIDI Device needs refresh (connected): " + newDevice.name);
 
+        knownMidiInputDevices = currentDevices;
+        owner.sigMidiDevicesChanged();
     }
 #endif
 

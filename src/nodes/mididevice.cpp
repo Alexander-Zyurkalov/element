@@ -3,6 +3,7 @@
 
 #include "nodes/mididevice.hpp"
 #include "engine/midiengine.hpp"
+#include <element/devices.hpp>
 #include <element/ui/style.hpp>
 
 namespace element {
@@ -143,16 +144,24 @@ private:
     }
 };
 
-MidiDeviceProcessor::MidiDeviceProcessor (const bool isInput, MidiEngine& me)
+MidiDeviceProcessor::MidiDeviceProcessor (const bool isInput, MidiEngine& me, DeviceManager& dm)
     : BaseProcessor(),
       inputDevice (isInput),
       midi (me)
 {
     setPlayConfigDetails (0, 0, 44100.0, 1024);
+    midiDevicesChangedConnection = dm.sigMidiDevicesChanged.connect ([this] {
+        DBG("Signal is here, the device = " + deviceWanted.name);
+        // TODO: send note all notes off??
+        closeDevice();
+
+        setDevice (deviceWanted);
+    });
 }
 
 MidiDeviceProcessor::~MidiDeviceProcessor() noexcept
 {
+    midiDevicesChangedConnection.disconnect();
     closeDevice();
 }
 
@@ -194,9 +203,11 @@ void MidiDeviceProcessor::setDevice (const MidiDeviceInfo& newDevice)
 
     if (inputDevice)
     {
+        // TODO: does it really remove the callback?
         midi.removeMidiInputCallback (this);
         if (deviceWanted.identifier.isNotEmpty())
         {
+            DBG("New midi input callback");
             midi.addMidiInputCallback (deviceWanted, this, true);
             device = deviceWanted;
         }
@@ -234,6 +245,7 @@ void MidiDeviceProcessor::setDevice (const MidiDeviceInfo& newDevice)
         prepareToPlay (rate, block);
 
     suspendProcessing (wasSuspended);
+//    sigDeviceChanged();
 }
 
 Result MidiDeviceProcessor::closeDevice()
