@@ -285,7 +285,7 @@ private:
     int pinSpacing = 9;
     Font font;
 
-    Point<int> originalPos;
+    juce::Point<int> originalPos;
     Rectangle<int> originalBounds;
     int customWidth = 0,
         customHeight = 0;
@@ -382,13 +382,13 @@ private:
     void setCustomSize (int width, int height);
     void setNodePosition (const int x, const int y);
     template <typename T>
-    void setNodePosition (const Point<T>& pt)
+    void setNodePosition (const juce::Point<T>& pt)
     {
         const auto pti = pt.toInt();
         setNodePosition (pti.x, pti.y);
     }
 
-    Point<double> getNodePosition() const noexcept;
+    juce::Point<double> getNodePosition() const noexcept;
 
     void setSelectedInternal (bool status);
 

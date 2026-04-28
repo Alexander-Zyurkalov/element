@@ -187,7 +187,7 @@ BlockComponent::BlockComponent (const Node& graph_, const Node& node_, const boo
     nodeName = node.getPropertyAsValue (tags::name);
     nodeName.addListener (this);
 
-    shadow.setShadowProperties (DropShadow (Colours::black.withAlpha (0.5f), 3, Point<int> (0, 1)));
+    shadow.setShadowProperties (DropShadow (Colours::black.withAlpha (0.5f), 3, juce::Point<int> (0, 1)));
     setComponentEffect (&shadow);
 
     addAndMakeVisible (configButton);
@@ -514,7 +514,7 @@ void BlockComponent::mouseDown (const MouseEvent& e)
     if (! isEnabled())
         return;
 
-    originalPos = localPointToGlobal (Point<int>());
+    originalPos = localPointToGlobal (juce::Point<int>());
     originalBounds = getBounds();
     toFront (true);
     dragging = false;
@@ -658,7 +658,7 @@ void BlockComponent::mouseDrag (const MouseEvent& e)
     int deltaX = e.getDistanceFromDragStartX();
     int deltaY = e.getDistanceFromDragStartY();
 
-    Point<int> pos (originalPos + Point<int> (deltaX, deltaY));
+    juce::Point<int> pos (originalPos + juce::Point<int> (deltaX, deltaY));
     if (getParentComponent() != nullptr)
         pos = getParentComponent()->getLocalPoint (nullptr, pos);
 
@@ -1255,9 +1255,9 @@ void BlockComponent::setNodePosition (const int x, const int y)
     }
 }
 
-Point<double> BlockComponent::getNodePosition() const noexcept
+juce::Point<double> BlockComponent::getNodePosition() const noexcept
 {
-    Point<double> pos;
+    juce::Point<double> pos;
     node.getPosition (pos.x, pos.y);
     return pos;
 }
