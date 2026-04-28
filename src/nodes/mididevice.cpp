@@ -199,8 +199,8 @@ void MidiDeviceProcessor::setDevice (const MidiDeviceInfo& newDevice)
 
     if (inputDevice)
     {
-        // TODO: does it really remove the callback?
         midi.removeMidiInputCallback (this);
+        midi.closeMidiInput (device.identifier);
         if (deviceWanted.identifier.isNotEmpty())
         {
             DBG("New midi input callback");
@@ -253,6 +253,7 @@ Result MidiDeviceProcessor::closeDevice()
     if (inputDevice)
     {
         midi.removeMidiInputCallback (this);
+        midi.closeMidiInput (device.identifier);
     }
     else
     {

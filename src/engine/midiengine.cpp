@@ -222,6 +222,23 @@ MidiEngine::MidiInputHolder* MidiEngine::getMidiInput (const String& identifier,
 }
 
 //==============================================================================
+void MidiEngine::closeMidiInput (const String& identifier)
+{
+    if (identifier.isEmpty())
+        return;
+    for (int i = openMidiInputs.size(); --i >= 0;)
+    {
+        auto* holder = openMidiInputs[i];
+        if (holder->input && holder->input->getIdentifier() == identifier)
+        {
+            holder->input->stop();
+            openMidiInputs.remove (i);
+            return;
+        }
+    }
+}
+
+//==============================================================================
 void MidiEngine::setMidiInputEnabled (const MidiDeviceInfo& device, const bool enabled)
 {
     juce::AudioDeviceManager deviceManager;

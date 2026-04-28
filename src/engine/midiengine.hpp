@@ -72,6 +72,11 @@ public:
      */
     void removeMidiInputCallback (MidiInputCallback* callback);
 
+    /** Stops and removes the open MidiInputHolder for the given identifier so the next
+        getMidiInput() call opens a fresh connection. No-op if not found.
+     */
+    void closeMidiInput (const String& identifier);
+
     /** Returns the number of enabled midi inputs */
     int getNumActiveMidiInputs() const;
 
