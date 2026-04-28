@@ -10,14 +10,13 @@
 namespace element {
 
 class MidiEngine;
-class DeviceManager;
 
 class MidiDeviceProcessor : public BaseProcessor,
                             public MidiInputCallback,
                             private Timer
 {
 public:
-    explicit MidiDeviceProcessor (const bool isInput, MidiEngine&, DeviceManager&);
+    explicit MidiDeviceProcessor (const bool isInput, MidiEngine&);
     ~MidiDeviceProcessor() noexcept;
 
     boost::signals2::signal<void()> sigDeviceChanged;

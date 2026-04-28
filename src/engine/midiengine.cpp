@@ -171,6 +171,9 @@ void MidiEngine::MidiInputHolder::handleIncomingMidiMessage (MidiInput* source, 
 MidiEngine::MidiEngine()
 {
     callbackHandler.reset (new CallbackHandler (*this));
+    midiDeviceListConnection = juce::MidiDeviceListConnection::make ([this] {
+        sigMidiDevicesChanged();
+    });
 }
 
 MidiEngine::~MidiEngine()
@@ -221,11 +224,13 @@ MidiEngine::MidiInputHolder* MidiEngine::getMidiInput (const String& identifier,
 //==============================================================================
 void MidiEngine::setMidiInputEnabled (const MidiDeviceInfo& device, const bool enabled)
 {
+    juce::AudioDeviceManager deviceManager;
     if (enabled != isMidiInputEnabled (device))
     {
         if (auto* holder = getMidiInput (device.identifier, enabled))
         {
             holder->active = enabled;
+            deviceManager.setMidiInputDeviceEnabled (device.identifier, enabled);
         }
 
         sendChangeMessage();

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <element/signals.hpp>
+
 namespace element {
 
 class Settings;
@@ -14,6 +16,8 @@ class MidiEngine : public juce::ChangeBroadcaster
 public:
     MidiEngine();
     ~MidiEngine();
+
+    Signal<void()> sigMidiDevicesChanged;
 
     //==============================================================================
     void applySettings (Settings&);
@@ -141,6 +145,7 @@ private:
 
     class CallbackHandler;
     std::unique_ptr<CallbackHandler> callbackHandler;
+    juce::MidiDeviceListConnection midiDeviceListConnection;
 
     MidiInputHolder* getMidiInput (const String& identifier, bool openIfNotAlready);
     void handleIncomingMidiMessageInt (juce::MidiInput*, const juce::MidiMessage&);

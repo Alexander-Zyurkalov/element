@@ -4,147 +4,17 @@
 #include <element/devices.hpp>
 #include "engine/jack.hpp"
 
-#if JUCE_MAC
-#include <CoreMIDI/CoreMIDI.h>
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
 namespace element {
 
 const int DeviceManager::maxAudioChannels = 128;
 
-#if JUCE_MAC
-namespace {
-
-juce::String cfStringToJuce (CFStringRef cfStr)
-{
-    if (cfStr == nullptr)
-        return {};
-
-    char buffer[512] = {};
-    if (CFStringGetCString (cfStr, buffer, sizeof (buffer), kCFStringEncodingUTF8))
-        return juce::String::fromUTF8 (buffer);
-
-    return {};
-}
-
-juce::String getEndpointName (MIDIObjectRef obj)
-{
-    CFStringRef name = nullptr;
-    if (MIDIObjectGetStringProperty (obj, kMIDIPropertyDisplayName, &name) == noErr && name != nullptr)
-    {
-        auto result = cfStringToJuce (name);
-        CFRelease (name);
-        return result;
-    }
-    return "<unknown>";
-}
-
-} // namespace
-#endif
-
 class DeviceManager::Private
 {
 public:
-    Private (DeviceManager& o) : owner (o)
-    {
-#if JUCE_MAC
-        OSStatus status = MIDIClientCreate (CFSTR ("ElementMIDIClient"),
-                                            &Private::midiNotifyProc,
-                                            this,
-                                            &midiClient);
-        if (status != noErr)
-        {
-            DBG ("Failed to create CoreMIDI client, status = " << (int) status);
-            midiClient = 0;
-        }
-#else
-        //TODO: and also midi outputs
-        knownMidiInputDevices = juce::MidiInput::getAvailableDevices();
-
-        midiListConnection = juce::MidiDeviceListConnection::make ([this] {
-            refreshMidiDevices();
-        });
-#endif
-    }
-
-    ~Private()
-    {
-#if JUCE_MAC
-        if (midiClient != 0)
-        {
-            MIDIClientDispose (midiClient);
-            midiClient = 0;
-        }
-#endif
-    }
-
-#if JUCE_MAC
-    static void midiNotifyProc (const MIDINotification* message, void* refCon)
-    {
-        auto* self = static_cast<Private*> (refCon);
-        if (self == nullptr)
-        {
-            return;
-        }
-
-        if (message->messageID != kMIDIMsgObjectAdded
-            && message->messageID != kMIDIMsgObjectRemoved)
-        {
-            return;
-        }
-
-        auto* addRemove = reinterpret_cast<const MIDIObjectAddRemoveNotification*> (message);
-
-        if (addRemove->childType != kMIDIObjectType_Source
-            && addRemove->childType != kMIDIObjectType_Destination)
-        {
-            return;
-        }
-
-        const bool added = (message->messageID == kMIDIMsgObjectAdded);
-        const auto name = getEndpointName (addRemove->child);
-
-        if (added)
-        {
-            juce::MessageManager::callAsync ([self, name] {
-                DBG ("MIDI Device needs refresh (connected): " + name);
-
-                self->owner.sigMidiDevicesChanged();
-            });
-        }
-    }
-#endif
-
-#if ! JUCE_MAC
-    void refreshMidiDevices()
-    {
-        JUCE_ASSERT_MESSAGE_THREAD
-
-        auto currentDevices = juce::MidiInput::getAvailableDevices();
-
-        for (const auto& oldDevice : knownMidiInputDevices)
-            if (! currentDevices.contains (oldDevice))
-                DBG ("MIDI Device needs refresh (disconnected): " + oldDevice.name);
-
-        for (const auto& newDevice : currentDevices)
-            if (! knownMidiInputDevices.contains (newDevice))
-                DBG ("MIDI Device needs refresh (connected): " + newDevice.name);
-
-        knownMidiInputDevices = currentDevices;
-        owner.sigMidiDevicesChanged();
-    }
-#endif
+    Private (DeviceManager& o) : owner (o) {}
 
     DeviceManager& owner;
     AudioEnginePtr engine;
-
-#if JUCE_MAC
-    MIDIClientRef midiClient { 0 };
-#else
-    juce::Array<juce::MidiDeviceInfo> knownMidiInputDevices;
-    juce::MidiDeviceListConnection midiListConnection;
-#endif
 
 #if ELEMENT_USE_JACK
     JackClient jack { "Element", 2, "main_in_", 2, "main_out_" };

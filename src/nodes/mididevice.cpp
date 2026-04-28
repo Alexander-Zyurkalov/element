@@ -3,7 +3,6 @@
 
 #include "nodes/mididevice.hpp"
 #include "engine/midiengine.hpp"
-#include <element/devices.hpp>
 #include <element/ui/style.hpp>
 
 namespace element {
@@ -144,17 +143,14 @@ private:
     }
 };
 
-MidiDeviceProcessor::MidiDeviceProcessor (const bool isInput, MidiEngine& me, DeviceManager& dm)
+MidiDeviceProcessor::MidiDeviceProcessor (const bool isInput, MidiEngine& me)
     : BaseProcessor(),
       inputDevice (isInput),
       midi (me)
 {
     setPlayConfigDetails (0, 0, 44100.0, 1024);
-    midiDevicesChangedConnection = dm.sigMidiDevicesChanged.connect ([this] {
-        DBG("Signal is here, the device = " + deviceWanted.name);
-        // TODO: send note all notes off??
+    midiDevicesChangedConnection = me.sigMidiDevicesChanged.connect ([this] {
         closeDevice();
-
         setDevice (deviceWanted);
     });
 }
@@ -209,6 +205,7 @@ void MidiDeviceProcessor::setDevice (const MidiDeviceInfo& newDevice)
         {
             DBG("New midi input callback");
             midi.addMidiInputCallback (deviceWanted, this, true);
+            midi.setMidiInputEnabled (deviceWanted, true);
             device = deviceWanted;
         }
     }
