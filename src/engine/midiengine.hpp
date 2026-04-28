@@ -7,6 +7,10 @@
 
 #include <element/signals.hpp>
 
+#if JUCE_MAC
+#include <CoreMIDI/CoreMIDI.h>
+#endif
+
 namespace element {
 
 class Settings;
@@ -148,9 +152,17 @@ private:
     std::unique_ptr<MidiOutput> defaultMidiOutput;
     CriticalSection audioCallbackLock, midiCallbackLock, midiOutputLock;
 
+    void refreshMidiDevices();
+
     class CallbackHandler;
     std::unique_ptr<CallbackHandler> callbackHandler;
+
+#if JUCE_MAC
+    MIDIClientRef midiClient { 0 };
+    static void midiNotifyProc (const MIDINotification* message, void* refCon);
+#else
     juce::MidiDeviceListConnection midiDeviceListConnection;
+#endif
 
     MidiInputHolder* getMidiInput (const String& identifier, bool openIfNotAlready);
     void handleIncomingMidiMessageInt (juce::MidiInput*, const juce::MidiMessage&);

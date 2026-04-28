@@ -5,6 +5,11 @@
 #include <element/juce/audio_devices.hpp>
 #include <element/juce/data_structures.hpp>
 
+#if JUCE_MAC
+#include <CoreMIDI/CoreMIDI.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include <element/settings.hpp>
 #include <element/tags.hpp>
 
@@ -168,16 +173,107 @@ void MidiEngine::MidiInputHolder::handleIncomingMidiMessage (MidiInput* source, 
 }
 
 //==============================================================================
+#if JUCE_MAC
+static bool isMIDIAlive (MIDIObjectRef source)
+{
+    SInt32 dummyId = 0;
+    return MIDIObjectGetIntegerProperty (source, kMIDIPropertyUniqueID, &dummyId) == noErr;
+}
+
+static MIDIEndpointRef findSource (const juce::MidiDeviceInfo& deviceInfo)
+{
+    SInt32 targetUID = deviceInfo.identifier.containsChar (' ')
+                           ? deviceInfo.identifier.fromLastOccurrenceOf (" ", false, false).getIntValue()
+                           : deviceInfo.identifier.getIntValue();
+    const ItemCount count = MIDIGetNumberOfSources();
+    for (ItemCount i = 0; i < count; ++i)
+    {
+        MIDIEndpointRef endpoint = MIDIGetSource (i);
+        SInt32 uid = 0;
+        MIDIObjectGetIntegerProperty (endpoint, kMIDIPropertyUniqueID, &uid);
+        if (uid == targetUID)
+            return endpoint;
+    }
+    return 0;
+}
+#endif
+
+void MidiEngine::refreshMidiDevices()
+{
+    JUCE_ASSERT_MESSAGE_THREAD
+
+    const auto available = MidiInput::getAvailableDevices();
+    for (int i = openMidiInputs.size(); --i >= 0;)
+    {
+        auto* holder = openMidiInputs[i];
+        if (holder->input == nullptr)
+            continue;
+        bool found = false;
+        for (const auto& dev : available)
+            if (dev.identifier == holder->input->getIdentifier())
+                { found = true; break; }
+        if (! found)
+        {
+            holder->input->stop();
+            openMidiInputs.remove (i);
+        }
+    }
+
+    sigMidiDevicesChanged();
+}
+
+#if JUCE_MAC
+void MidiEngine::midiNotifyProc (const MIDINotification* message, void* refCon)
+{
+    auto* self = static_cast<MidiEngine*> (refCon);
+    if (self == nullptr)
+        return;
+
+    switch (message->messageID)
+    {
+        case kMIDIMsgObjectAdded:
+        case kMIDIMsgObjectRemoved:
+        case kMIDIMsgSetupChanged:
+            juce::MessageManager::callAsync ([self] {
+                self->refreshMidiDevices();
+            });
+            break;
+        default:
+            break;
+    }
+}
+#endif
+
 MidiEngine::MidiEngine()
 {
     callbackHandler.reset (new CallbackHandler (*this));
+
+#if JUCE_MAC
+    OSStatus status = MIDIClientCreate (CFSTR ("ElementMIDIClient"),
+                                        &MidiEngine::midiNotifyProc,
+                                        this,
+                                        &midiClient);
+    if (status != noErr)
+    {
+        DBG ("MidiEngine: failed to create CoreMIDI client, status = " << (int) status);
+        midiClient = 0;
+    }
+#else
     midiDeviceListConnection = juce::MidiDeviceListConnection::make ([this] {
-        sigMidiDevicesChanged();
+        refreshMidiDevices();
     });
+#endif
 }
 
 MidiEngine::~MidiEngine()
 {
+#if JUCE_MAC
+    if (midiClient != 0)
+    {
+        MIDIClientDispose (midiClient);
+        midiClient = 0;
+    }
+#endif
     callbackHandler.reset (nullptr);
 }
 
